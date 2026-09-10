@@ -58,7 +58,10 @@ class MP5xxx(CommonTSPErrorCheckMixin, TSPControl, Mainframe, ABC):
         """Return the total number of channels across all modules."""
         total_channels = 0
         for slot in range(1, self.total_slots + 1):
-            model_returned = self.query(f"print(slot[{slot}].model)")
+            model_returned = self.query(
+                f"if slot[{slot}] == nil then print('') else print(slot[{slot}].model) end",
+                allow_empty=True,
+            )
             # TODO: Modify the logic to determine channel based on return type
             channels_in_module = int(
                 next((char for char in reversed(str(model_returned)) if char.isdigit()), 0)
