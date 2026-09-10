@@ -21,7 +21,7 @@ Things to be included in the next release go here.
 ### Fixed
 
 - `total_channels` property for MP5xxx no longer times out when slots not populated.
-- improve socket duplicate detection and address formatting
+- Fixed formatting of `lan_port` when used in device address duplicate detection.
 
 ---
 
