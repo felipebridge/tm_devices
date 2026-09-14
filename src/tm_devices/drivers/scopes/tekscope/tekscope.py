@@ -31,6 +31,7 @@ from tm_devices.driver_mixins.abstract_device_functionality import (
     ScreenCaptureMixin,
     SearchMixin,
     USBDrivesMixin,
+    WaveformSaveMixin,
 )
 from tm_devices.driver_mixins.abstract_device_functionality.signal_generator_mixin import (
     ExtendedSourceDeviceConstants,
@@ -100,6 +101,7 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
     USBDrivesMixin,
     ChannelControlMixin,
     ScreenCaptureMixin,
+    WaveformSaveMixin,
     ABC,
 ):
     """Base TekScope scope device driver.
@@ -269,6 +271,18 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
             Tuple[str, ...]: A tuple of valid, lowercase image extensions for this device.
         """
         return ".png", ".bmp", ".jpg", ".jpeg"
+
+    @property
+    def valid_waveform_extensions(self) -> tuple[str, ...]:
+        """Return a tuple of valid waveform file extensions for this device.
+
+        The extensions will be in the format '.ext', where 'ext' is the lowercase extension,
+        e.g. (".png", ".jpg").
+
+        Returns:
+            Tuple[str, ...]: A tuple of valid, lowercase waveform file extensions for this device.
+        """
+        return (".csv",)
 
     ################################################################################################
     # Public Methods
@@ -736,6 +750,40 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
         )
         self._ensure_directory_exists_on_device(device_filepath)
         self.write(f"SAVE:IMAGE {device_filepath_string}", opc=True)
+        self.write(f"FILESYSTEM:READFILE {device_filepath_string}")
+        data = self.read_raw()
+        (local_folder / filename).write_bytes(data)
+        if not keep_device_file:
+            self.write(f"FILESYSTEM:DELETE {device_filepath_string}", opc=True)
+            time.sleep(0.2)  # wait to ensure the file is deleted
+
+    def _save_waveform(
+        self,
+        filename: Path,
+        *,
+        source: str,
+        local_folder: Path,
+        device_folder: Path,
+        keep_device_file: bool = False,
+    ) -> None:
+        """Save waveform data from the device and download it locally.
+
+        Args:
+            filename: The name of the file to save the waveform as.
+            source: The waveform source to save, e.g. "CH1" or "ALL".
+            local_folder: The local folder to save the waveform file in. Defaults to "./".
+            device_folder: The folder on the device to save the waveform file in. Defaults to
+                "./".
+            keep_device_file: Whether to keep the file on the device after downloading it.
+                Defaults to False.
+        """
+        self.set_and_check("SAVE:WAVEFORM:FILEFORMAT", "SPREADSHEET")
+        device_filepath = device_folder / filename
+        device_filepath_string = (
+            f'"{"./" if not device_filepath.drive else ""}{device_filepath.as_posix()}"'
+        )
+        self._ensure_directory_exists_on_device(device_filepath)
+        self.write(f"SAVE:WAVEFORM {source},{device_filepath_string}", opc=True)
         self.write(f"FILESYSTEM:READFILE {device_filepath_string}")
         data = self.read_raw()
         (local_folder / filename).write_bytes(data)
