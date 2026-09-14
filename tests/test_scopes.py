@@ -618,7 +618,6 @@ def test_tekscopepc(  # noqa: PLR0915
         scope.save_waveform(local_folder=tmp_path)
         assert local_file.read_bytes() == b"1234"
         stdout = capsys.readouterr().out
-        assert "SAVE:WAVEFORM:FILEFORMAT SPREADSHEET" in stdout
         assert f'SAVE:WAVEFORM ALL,"./{filename.as_posix()}"' in stdout
         assert f'FILESYSTEM:READFILE "./{filename.as_posix()}"' in stdout
         assert f'FILESYSTEM:DELETE "./{filename.as_posix()}"' in stdout
@@ -641,10 +640,33 @@ def test_tekscopepc(  # noqa: PLR0915
         )
         assert local_file.read_bytes() == b"5678"
         stdout = capsys.readouterr().out
-        assert "SAVE:WAVEFORM:FILEFORMAT SPREADSHEET" in stdout
         assert f'SAVE:WAVEFORM CH1,"./new_folder/{filename.as_posix()}"' in stdout
         assert f'FILESYSTEM:READFILE "./new_folder/{filename.as_posix()}"' in stdout
         assert f'FILESYSTEM:DELETE "./new_folder/{filename.as_posix()}"' not in stdout
+
+    with (
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.read_raw",
+            mock.MagicMock(return_value=b"91011"),
+        ),
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.write",
+            mock.MagicMock(return_value=None),
+        ),
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.read",
+            mock.MagicMock(return_value="1"),  # this mocks the *OPC? query return value
+        ),
+    ):
+        # The file format saved is selected by the filename's extension, e.g. ".isf" for the
+        # scope's internal format instead of the default ".csv" spreadsheet format.
+        scope.enable_verification = False
+        filename = pathlib.Path("temp.isf")
+        local_file = tmp_path / filename
+        scope.save_waveform(filename, local_folder=tmp_path)
+        assert local_file.read_bytes() == b"91011"
+        stdout = capsys.readouterr().out
+        assert f'SAVE:WAVEFORM ALL,"./{filename.as_posix()}"' in stdout
 
     scope.expect_esr(0)
 

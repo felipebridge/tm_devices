@@ -277,12 +277,13 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
         """Return a tuple of valid waveform file extensions for this device.
 
         The extensions will be in the format '.ext', where 'ext' is the lowercase extension,
-        e.g. (".png", ".jpg").
+        e.g. (".csv", ".isf"). The extension passed to ``save_waveform()`` determines the file
+        format the device saves, per the ``SAVe:WAVEform`` command.
 
         Returns:
             Tuple[str, ...]: A tuple of valid, lowercase waveform file extensions for this device.
         """
-        return (".csv",)
+        return ".csv", ".isf"
 
     ################################################################################################
     # Public Methods
@@ -768,6 +769,9 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
     ) -> None:
         """Save waveform data from the device and download it locally.
 
+        The file format saved (e.g. spreadsheet-style CSV or the scope's internal ISF format) is
+        determined by the extension in ``filename``, per the ``SAVe:WAVEform`` command.
+
         Args:
             filename: The name of the file to save the waveform as.
             source: The waveform source to save, e.g. "CH1" or "ALL".
@@ -777,7 +781,6 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
             keep_device_file: Whether to keep the file on the device after downloading it.
                 Defaults to False.
         """
-        self.set_and_check("SAVE:WAVEFORM:FILEFORMAT", "SPREADSHEET")
         device_filepath = device_folder / filename
         device_filepath_string = (
             f'"{"./" if not device_filepath.drive else ""}{device_filepath.as_posix()}"'

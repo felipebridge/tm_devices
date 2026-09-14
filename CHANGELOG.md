@@ -18,7 +18,7 @@ Valid subsections within a version are:
 
 ### Added
 
-- `save_waveform()` method on TekScope devices, which saves waveform data to a CSV file on the device and downloads it locally, mirroring `save_screenshot()`.
+- `save_waveform()` method on TekScope devices, which saves waveform data on the device (as a CSV or ISF file, selected by the filename's extension) and downloads it locally, mirroring `save_screenshot()`.
 
 ---
 
