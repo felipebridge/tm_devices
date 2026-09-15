@@ -1,6 +1,8 @@
 # pyright: reportPrivateUsage=none
 """Tests for the config_parser.py file."""
 
+import warnings
+
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -146,7 +148,9 @@ def test_standalone_option_is_deprecated() -> None:
     assert options.visa_library is None
 
     # not setting `standalone` at all must not warn
-    DMConfigOptions()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        DMConfigOptions()
 
 
 def test_visa_library_option_from_file() -> None:
