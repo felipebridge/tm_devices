@@ -614,8 +614,10 @@ def test_tekscopepc(  # noqa: PLR0915
                 f"%Y%m%d_%H%M%S{scope.valid_waveform_extensions[0]}"
             )
         )
-        local_file = tmp_path / filename
-        scope.save_waveform(local_folder=tmp_path)
+        # local_folder does not exist yet, so save_waveform() must create it.
+        new_local_folder = tmp_path / "does_not_exist_yet"
+        local_file = new_local_folder / filename
+        scope.save_waveform(local_folder=new_local_folder)
         assert local_file.read_bytes() == b"1234"
         stdout = capsys.readouterr().out
         assert f'SAVE:WAVEFORM ALL,"./{filename.as_posix()}"' in stdout
