@@ -22,7 +22,7 @@ class WaveformSaveMixin(ABC):
         """Return a tuple of valid waveform file extensions for this device.
 
         The extensions will be in the format '.ext', where 'ext' is the lowercase extension,
-        e.g. (".csv", ".isf").
+        e.g. (".wfm", ".csv", ".mat").
 
         Returns:
             Tuple[str, ...]: A tuple of valid, lowercase waveform file extensions for this device.

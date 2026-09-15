@@ -277,13 +277,15 @@ class AbstractTekScope(  # pylint: disable=too-many-public-methods
         """Return a tuple of valid waveform file extensions for this device.
 
         The extensions will be in the format '.ext', where 'ext' is the lowercase extension,
-        e.g. (".csv", ".isf"). The extension passed to ``save_waveform()`` determines the file
-        format the device saves, per the ``SAVe:WAVEform`` command.
+        e.g. (".wfm", ".csv", ".mat"). The extension passed to ``save_waveform()`` determines
+        the file format the device saves, per the ``SAVe:WAVEform`` command: ``.wfm`` for the
+        Tektronix internal format, ``.csv`` for a comma-separated-values spreadsheet, and
+        ``.mat`` for a MATLAB-compatible file.
 
         Returns:
             Tuple[str, ...]: A tuple of valid, lowercase waveform file extensions for this device.
         """
-        return ".csv", ".isf"
+        return ".wfm", ".csv", ".mat"
 
     ################################################################################################
     # Public Methods

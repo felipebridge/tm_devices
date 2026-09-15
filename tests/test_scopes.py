@@ -658,13 +658,36 @@ def test_tekscopepc(  # noqa: PLR0915
             mock.MagicMock(return_value="1"),  # this mocks the *OPC? query return value
         ),
     ):
-        # The file format saved is selected by the filename's extension, e.g. ".isf" for the
+        # The file format saved is selected by the filename's extension, e.g. ".wfm" for the
         # scope's internal format instead of the default ".csv" spreadsheet format.
         scope.enable_verification = False
-        filename = pathlib.Path("temp.isf")
+        filename = pathlib.Path("temp.wfm")
         local_file = tmp_path / filename
         scope.save_waveform(filename, local_folder=tmp_path)
         assert local_file.read_bytes() == b"91011"
+        stdout = capsys.readouterr().out
+        assert f'SAVE:WAVEFORM ALL,"./{filename.as_posix()}"' in stdout
+
+    with (
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.read_raw",
+            mock.MagicMock(return_value=b"121314"),
+        ),
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.write",
+            mock.MagicMock(return_value=None),
+        ),
+        mock.patch(
+            "pyvisa.resources.messagebased.MessageBasedResource.read",
+            mock.MagicMock(return_value="1"),  # this mocks the *OPC? query return value
+        ),
+    ):
+        # ".mat" saves the waveform in a MATLAB-compatible file format.
+        scope.enable_verification = False
+        filename = pathlib.Path("temp.mat")
+        local_file = tmp_path / filename
+        scope.save_waveform(filename, local_folder=tmp_path)
+        assert local_file.read_bytes() == b"121314"
         stdout = capsys.readouterr().out
         assert f'SAVE:WAVEFORM ALL,"./{filename.as_posix()}"' in stdout
 
